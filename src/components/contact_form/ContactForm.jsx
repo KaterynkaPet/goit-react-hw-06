@@ -1,11 +1,19 @@
+import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact, selectContacts } from '../../redux/contactsSlice.js';
 import css from './ContactForm.module.css'
 
 const ContactForm = ({ addContact }) => {
-    const handleSubmit = (values, { resetForm }) => {
-        addContact({ id: Math.random().toString(), ...values });
-        resetForm();
+    const dispatch = useDispatch();
+    const contacts = useSelector(selectContacts);
+   
+    const [formattedNumber, setFormattedNumber] = useState('');
+
+    const initialValues = {
+        name: '',
+        number: '',
     };
 
     const validationSchema = Yup.object({
@@ -19,6 +27,34 @@ const ContactForm = ({ addContact }) => {
             .max(50, 'Name must be less than 50 characters'),
     });
     
+    const formatPhoneNumber = (value) => {
+        const phoneNumber = value.replace(/[^\d]/g, '');
+        const match = phoneNumber.match(/^(\d{0,3})(\d{0,2})(\d{0,2})$/);
+        if (match) {
+        return match.slice(1).filter(Boolean).join('-');
+        }
+        return '';
+    };
+    
+    const handleChange = (event, formikProps) => {
+        const { value } = event.target;
+        const formatted = formatPhoneNumber(value);
+        setFormattedNumber(formatted);
+        formikProps.setFieldValue('number', formatted);
+    };
+
+    const handleSubmit = (values, { resetForm }) => {
+        const isDuplicate = contacts.some(contact =>
+        contact.name === values.name && contact.number === values.number
+        );
+        if (isDuplicate) {
+            alert('This contact already exists.');
+        } else {
+            dispatch(addContact(values));
+            resetForm();
+            setFormattedNumber(''); // Reset the formatted number
+        }
+  };
     return (
         <Formik
             initialValues={{
@@ -27,22 +63,25 @@ const ContactForm = ({ addContact }) => {
             }}
             onSubmit={handleSubmit}
             validationSchema={validationSchema}
-        >
-            <Form  className={css.form}>
-                <div className={css.formGroup} >
-                    <label htmlFor='name'>Name</label>
-                    <Field className={css.input} type='text' name='name' id='name' />
-                    <ErrorMessage className={css.error} name='name' component='div' />
-                </div>
+        >           
+                <Form  className={css.form}>
+                    <div className={css.formGroup} >
+                        <label htmlFor='name'>Name</label>
+                        <Field className={css.input} type='text' name='name' id='name' />
+                        <ErrorMessage className={css.error} name='name' component='div' />
+                    </div>
             
-                <div className={css.formGroup}>
-                    <label htmlFor='number'>Number</label>
-                    <Field className={css.input} type='number' name='number' id='number' />
-                    <ErrorMessage className={css.error} name='number' component='div' />
-                </div>
+                    <div className={css.formGroup}>
+                        <label htmlFor='number'>Number</label>
+                        <Field className={css.input} type='number' name='number'  />
+                        <ErrorMessage className={css.error} name='number' component='div' />
+                    </div>
             
-                <button className={css.btn} type='submit'>Add contact</button>
-            </Form>
+                    <button className={css.btn} type='submit'>
+                        Add contact
+                    </button>
+                </Form>   
+                       
         </Formik>
         
     );
