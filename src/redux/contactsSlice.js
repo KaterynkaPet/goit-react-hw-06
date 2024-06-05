@@ -1,5 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { nanoid } from "@reduxjs/toolkit";
+import { createSlice, nanoid } from "@reduxjs/toolkit";
 
 const formatPhoneNumber = (value) => {
   const phoneNumber = value.replace(/[^\d]/g, '');

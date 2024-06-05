@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addContact, selectContacts } from '../../redux/contactsSlice.js';
 import css from './ContactForm.module.css'
 
-const ContactForm = ({ addContact }) => {
+const ContactForm = () => {
     const dispatch = useDispatch();
     const contacts = useSelector(selectContacts);
    
@@ -36,11 +36,11 @@ const ContactForm = ({ addContact }) => {
         return '';
     };
     
-    const handleChange = (event, formikProps) => {
+    const handleChange = (event, setFieldValue) => {
         const { value } = event.target;
         const formatted = formatPhoneNumber(value);
         setFormattedNumber(formatted);
-        formikProps.setFieldValue('number', formatted);
+        setFieldValue('number', formatted);
     };
 
     const handleSubmit = (values, { resetForm }) => {
@@ -57,14 +57,12 @@ const ContactForm = ({ addContact }) => {
   };
     return (
         <Formik
-            initialValues={{
-                name: "",
-                number: ""
-            }}
+            initialValues={initialValues}
             onSubmit={handleSubmit}
             validationSchema={validationSchema}
-        >           
-                <Form  className={css.form}>
+        >  
+            {({ setFieldValue }) => (
+                <Form className={css.form}>
                     <div className={css.formGroup} >
                         <label htmlFor='name'>Name</label>
                         <Field className={css.input} type='text' name='name' id='name' />
@@ -73,15 +71,21 @@ const ContactForm = ({ addContact }) => {
             
                     <div className={css.formGroup}>
                         <label htmlFor='number'>Number</label>
-                        <Field className={css.input} type='number' name='number'  />
+                        <Field
+                            className={css.input}
+                            type='text'
+                            name='number'
+                            value={formattedNumber}
+                            onChange={(event) => handleChange(event, setFieldValue)}
+                        />
                         <ErrorMessage className={css.error} name='number' component='div' />
                     </div>
             
                     <button className={css.btn} type='submit'>
                         Add contact
                     </button>
-                </Form>   
-                       
+                </Form>
+            )}          
         </Formik>
         
     );
